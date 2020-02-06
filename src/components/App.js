@@ -8,22 +8,40 @@ class App extends React.Component {
     super()
 
     this.state = {
-      pets: [],
-      filters: {
+        pets: [],
+        filters: {
         type: 'all'
       }
     }
   }
-  handleChangeType = type => {
-    this.setState({filters: {type: type}})
+
+
+  fetchPets = () => {
+    let endpoint = '/api/pets'
+
+    // if selection is anything other than "all", then find the type that 
+    // was selected by adding it to the end of the endpoint call
+    if (this.state.filters.type !== 'all') {
+      endpoint += `?type=${this.state.filters.type}`
+    }
+
+    fetch(endpoint)
+    .then(res => res.json())
+    .then(pets => this.setState({ pets: pets }))
   }
-  handleFindPetsClick = () => {
-    let url = (this.state.filters.type === 'all' ? '' : `?type=${this.state.filters.type}`)
-    fetch(`/api/pets${url}`).then(r => r.json()).then(pets => this.setState({pets: pets}))
+
+  // selects the type that was selected to show on change
+  onChangeType = ({ target: {value} }) => {
+    this.setState({filters: {...this.state.filters, type: value}})
   }
-  handleAdoptPet = id => {
-    this.setState(prev => ({pets: prev.pets.map(pet => pet.id === id ? {...pet, isAdopted: true} : pet)}))
+
+  onAdoptPet = petId => {
+    const pets = this.state.pets.map(pet => {
+      return pet.id === petId ? {...pet, isAdopted: true} : p;
+    })
+    this.setState({ pets: pets })
   }
+
   render() {
     return (
       <div className="ui container">
@@ -33,10 +51,15 @@ class App extends React.Component {
         <div className="ui container">
           <div className="ui grid">
             <div className="four wide column">
-              <Filters onChangeType={this.handleChangeType} onFindPetsClick={this.handleFindPetsClick}/>
+              <Filters 
+                onChangeType={this.onChangeType}
+                onFindPetsClick={this.fetchPets}
+              />
             </div>
             <div className="twelve wide column">
-              <PetBrowser pets={this.state.pets} onAdoptPet={this.handleAdoptPet}/>
+              <PetBrowser 
+              pets={this.state.pets}
+              onAdoptPet={this.onAdoptPet}/>
             </div>
           </div>
         </div>
